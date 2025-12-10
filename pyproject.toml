@@ -1,0 +1,11 @@
+[project]
+name = "ai_agent"
+version = "0.0.1"
+description = "AI agent learning project for learning RAG system based on llama-index package"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "llama-index>=0.14.10",
+]
+
+[project.optional-dependencies]

@@ -1,0 +1,8 @@
+# --- Secrets ---
+.env
+
+# --- Python ---
+.venv/
+
+# --- VScode workspace ---
+ai_agent_learning.code-workspace
