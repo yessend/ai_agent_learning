@@ -5,7 +5,10 @@ description = "AI agent learning project for learning RAG system based on llama-
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "google-genai>=1.55.0",
     "llama-index>=0.14.10",
+    "llama-index-embeddings-huggingface>=0.6.1",
+    "llama-index-llms-google-genai>=0.8.0",
 ]
 
 [project.optional-dependencies]
