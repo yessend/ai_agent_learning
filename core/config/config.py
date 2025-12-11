@@ -8,3 +8,6 @@ class Config:
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
     CHAT_LLM = "gemini-2.5-flash-lite"
     EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
+    
+    QDRANT_URL = os.getenv("QDRANT_URL")
+    QDRANT_PORT = int(os.getenv("QDRANT_PORT"))
