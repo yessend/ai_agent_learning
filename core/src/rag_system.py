@@ -30,9 +30,20 @@ class RagSystem:
 
         
     def _get_router(self) -> RouterRetriever | None:
+        """
+        Args:
+            self: RagSystem class instance itself
         
+        The given method returns the RouterRetriever object, which using the LLMMultiSelector selects
+        the most appropriate retrievers from the list of RetrieverTool objects (which are just wrapper around
+        retrievers from index with added desrcription for LLM selection). Number of selected retrievers is
+        ROUTER_RETRIEVER_MAX_OUTPUTS from the Config file, while each retrievers selects SIMILARITY_TOP_K (from
+        Config as well) nodes from each index (which is created from distinct Qdrant collection).
+        
+        Returns:
+            RouterRetriever | None: explained above
+        """
         self._retriever_tools = []
-        # retriever_tools = []
         
         for collection_name, colleciton_description in RagConstants.COLLECTIONS.items():
             
@@ -68,10 +79,36 @@ class RagSystem:
         )
         return router
     
-    """
-    def _relevance_filter(self):
+    # Just to check the relevance prompt
+    def _relevance_filter(self, retrieved_nodes, query: str):
+        """
+        Checks if retrieved nodes from the index (buiilt on top of vector database)
+        contains relevant information to the user's prompt.
+        """
         
+        if not retrieved_nodes:
+            return False
+        
+        relevant_nodes = [node.text for node in retrieved_nodes]
+        
+        context = "\n".join(relevant_nodes)
+        
+        relevance_prompt = f"""
+        Question: {query}
+        
+        Retrieved context:
+        {context}
+        
+        Does the retrieved context contain information that can help answer the question? 
+        Answer with only 'YES' or 'NO'.
+        """
+        return relevance_prompt
+            
     
+    
+    
+    
+    """
     def pipeline(self, query) -> None:
         
         # 1. Classify intent
@@ -82,4 +119,5 @@ class RagSystem:
         retrieved_nodes = self.router_retriever.retrieve(query)
         
         # 4. Check relevance:
-        is_relevant = _relevance_filter(retrieved_nodes)"""
+        is_relevant = _relevance_filter(retrieved_nodes)
+    """
