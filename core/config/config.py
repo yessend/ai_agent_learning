@@ -6,10 +6,14 @@ load_dotenv()
 class Config:
     
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
     CHAT_LLM = "gemini-2.5-flash-lite"
+    CHAT_LLM_TEMPERATURE = 0.2
+    CHAT_LLM_MAX_TOKENS = 3000
+
     ROUTER_LLM = "gemini-2.5-flash-lite"
-    LLM_TEMPERATURE = 0.2
-    LLM_MAX_TOKENS = 3000
+    ROUTER_LLM_TEMPERATURE = 0.1
+    ROUTER_LLM_MAX_TOKENS = 2500
     
     EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
     
