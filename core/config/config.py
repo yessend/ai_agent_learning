@@ -22,3 +22,5 @@ class Config:
     
     SIMILARITY_TOP_K = 5
     ROUTER_RETRIEVER_MAX_OUTPUTS = 3
+    
+    CHAT_MEMORY_TOKEN_LIMIT = 3000
