@@ -152,10 +152,10 @@ class RagSystem:
         # Here we either get cached chat_engine (SimpleChatEngine object) for a specific user 
         # or we create a new chat_engine for the user if he hadn't one before.
         if user_id in self.chat_engines_cached:
-            logger.info("Using cached engine for the user {user_id}")
+            logger.info(f"Using cached engine for the user {user_id}")
             return self.chat_engines_cached[user_id]
         
-        logger.info("Creating a new chat engine for user {user_id}")
+        logger.info(f"Creating a new chat engine for user {user_id}")
         
         memory = Memory.from_defaults(
             session_id = "Test_session_id", # change it later on a correct session_id
@@ -175,15 +175,16 @@ class RagSystem:
         # Here we produce the final response to the user's query
         
         context = await self._is_retrieval_relevant(user_query)
+        prompt = ""
         
         if not context:
-            return f"{user_name}, I am sorry, but it seems that I don't have an answer to your question in my knowledge base, or it might be irrelevant."
-        
-        prompt = RagConstants.SYSTEM_PROMPT.format(
-            user_name = user_name,
-            question = user_query,
-            context = context
-        )
+            prompt = f"Name of the user: {user_name}; question: {user_query}"
+        else:
+            prompt = RagConstants.SYSTEM_PROMPT.format(
+                user_name = user_name,
+                question = user_query,
+                context = context
+            )
         
         chat_engine = self._get_or_create_chat_engine(user_id)
         
