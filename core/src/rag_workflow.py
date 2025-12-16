@@ -24,33 +24,27 @@ from llama_index.core.workflow import (
 )
 
 
+
+# These are the custom classes to perform ingestion of documents:
 class RetrieverToolsEvent(Event):
     retriever_tools: list[RetrieverTool]
 
 
-class RetrievalRelevantEvent(Event):
-    context: str | bool
+class RagIngestionWorkflow(Workflow):
+    # This is the RAG workflow to ingest the documents and form the knowledge base
 
-
-class RagWorkflow(Workflow):
-    # This is the whole RAG system implemented as a Workflow
-    
     def __init__(
         self, 
-        chat_engine_registry: ChatEngineRegistry,
         router_llm: GoogleGenAI | None,
-        chat_llm: GoogleGenAI | None,
         embed_model: HuggingFaceEmbedding | None
     ):
         super().__init__()
-        self.chat_engine_registry = chat_engine_registry
         self.router_llm = router_llm
-        self.chat_llm = chat_llm
         self.embed_model = embed_model
-    
-    
+
+
     @step
-    async def _ingest(self, ctx: Context, ev: StartEvent) -> RetrieverToolsEvent | None:
+    async def _ingest(self, ev: StartEvent) -> RetrieverToolsEvent | None:
         # Initialize the retriever_tools list to create a list of RetrieverTool objects that we will later
         # pass into the LLMMultiSelector for selecting an appropriate retriever
         docs_path = ev.get("docs_path")
@@ -100,7 +94,7 @@ class RagWorkflow(Workflow):
     
     
     @step
-    async def _get_router_retriever(self, ctx: Context, ev: RetrieverToolsEvent) -> StopEvent | None:
+    async def _get_router_retriever(self, ev: RetrieverToolsEvent) -> StopEvent | None:
         # Create a router from that list of RetrieverTool objects using an LLMMultiSelector for selecting relevant retrievers 
         # based on a prompt
         router = RouterRetriever(
@@ -114,6 +108,27 @@ class RagWorkflow(Workflow):
             retriever_tools = ev.retriever_tools
         )
         return StopEvent(result = router)
+
+
+
+# These are the custom classes to perform RAG and synthesis of an answer:
+class RetrievalRelevantEvent(Event):
+    context: str | bool
+
+
+class RagChatWorkflow(Workflow):
+    # This is the whole RAG system implemented as a Workflow
+    
+    def __init__(
+        self, 
+        chat_engine_registry: ChatEngineRegistry,
+        router_llm: GoogleGenAI | None,
+        chat_llm: GoogleGenAI | None,
+    ):
+        super().__init__()
+        self.chat_engine_registry = chat_engine_registry
+        self.router_llm = router_llm
+        self.chat_llm = chat_llm
     
     
     @step
