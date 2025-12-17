@@ -1,3 +1,6 @@
+from pathlib import Path
+import json
+
 class RagConstants:
 
     SYSTEM_PROMPT = (
@@ -103,3 +106,13 @@ class RagConstants:
             {context}
         """
     )
+    
+    BASE_DIR = Path(__file__).resolve().parent
+    DOCS_PATH = BASE_DIR.parents[1] / "documents"
+    COLLECTIONS_PATH_JSON = DOCS_PATH / "collections_mba.json"
+    
+    with open(COLLECTIONS_PATH_JSON, "r", encoding = "utf-8") as file:
+        COLLECTIONS = json.load(file)
+
+    for collections_name, collection_description in COLLECTIONS.items():
+        COLLECTIONS[collections_name] = (" \n ").join([line.strip() for line in collection_description.splitlines()[1:-2]])
