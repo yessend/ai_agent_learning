@@ -2,7 +2,7 @@ from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core.chat_engine.simple import SimpleChatEngine
 from llama_index.core.memory import Memory
 from llama_index.core.agent import AgentChatResponse
-from llama_index.core.base.llms.types import ChatMessage, MessageRole, TextBlock
+from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.callbacks import trace_method
 
 from core.config.config import Config
@@ -40,10 +40,8 @@ class CustomSimpleChatEngine(SimpleChatEngine):
             initial_token_count = 0
         
         context_prompt = (
-            "Use the context information below to answer user's question."
-            "\n--------------------\n"
-            f"{context}"
-            "\n--------------------\n"
+            "Use the context information below to answer user's question.\n"
+            f"<{context}>"
         )
         
         context_wrapped = ChatMessage(content=context_prompt, role="user")
@@ -76,7 +74,7 @@ class ChatEngineRegistry:
         logger.info(f"Creating a new chat engine for user {user_id}")
         
         memory = Memory.from_defaults(
-            session_id = "Test_session_id", # change it later on a correct session_id
+            # session_id = "Test_session_id", # change it later on a correct session_id
             token_limit = Config.CHAT_MEMORY_TOKEN_LIMIT,
             chat_history_token_ratio = Config.CHAT_HISTORY_TOKEN_RATIO
         )
