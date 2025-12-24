@@ -20,6 +20,7 @@ class RagConstants:
             - If the context does not contain enough information to answer the question, explicitly state that the information is not available in the provided materials.
             - If the question is outside the scope of MBA-related content for MEM students, state that you cannot answer it within your defined scope.
             - Do NOT mention internal system processes, retrieval mechanisms, or that you are an AI model.
+            - Do NOT mention the context
 
             Style:
             - Use clear academic language suitable for graduate-level engineering management students.
@@ -48,7 +49,8 @@ class RagConstants:
             - Use ONLY the provided context to construct your answer.
             - Do NOT use outside knowledge, assumptions, or general world knowledge.
             - Do NOT invent facts or fill in missing information.
-            - If the context does not contain enough information to answer the question, explicitly state that the information is not available in the provided materials.
+            - Do NOT mention the context
+            - If the context does not contain enough information to answer the question, just state that you do not know the answer.
             - If the question is outside the scope of MBA-related content for MEM students, state that you cannot answer it within your defined scope.
             - Do NOT mention internal system processes, retrieval mechanisms, or that you are an AI model.
 

@@ -1,8 +1,7 @@
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.tools import RetrieverTool
-from llama_index.core.retrievers import RouterRetriever, BaseRetriever
+from llama_index.core.retrievers import RouterRetriever
 from llama_index.core.selectors import LLMMultiSelector
-from llama_index.core.schema import NodeWithScore, QueryBundle
 
 from core.config.config import Config
 from core.config.constants import RagConstants
@@ -10,7 +9,7 @@ from core.config.llm_setup import LLMsetups
 
 from core.helpers.logger import logger
 
-class RagIngestionRetriever(BaseRetriever):
+class RagIngestion:
     # This is the RAG class to ingest the documents and form the knowledge base
     # It will be set up in the workflow as a dependency
     
@@ -19,11 +18,9 @@ class RagIngestionRetriever(BaseRetriever):
         self.embed_model = LLMsetups.EMBED_MODEL
         self.docs_path = RagConstants.DOCS_PATH
         self.collections = RagConstants.COLLECTIONS
-        self.router_retriever = self.ingest()
-        super().__init__()
 
 
-    def ingest(self) -> RouterRetriever | None:
+    def ingest(self) -> RetrieverTool | None:
         # Initialize the retriever_tools list to create a list of RetrieverTool objects that we will later
         # pass into the LLMMultiSelector for selecting an appropriate retriever
         
@@ -80,56 +77,3 @@ class RagIngestionRetriever(BaseRetriever):
             retriever_tools = retriever_tools
         )
         return router
-    
-    def _retrieve(self, query_bundle: str | QueryBundle) -> list[NodeWithScore]:
-        # Simple sync fallback (won't be used by ChatEngine.achat)
-        return []
-    
-    async def _aretrieve(self, query_bundle: str | QueryBundle) -> list[NodeWithScore] | None:
-        try:
-            nodes = await self.router_retriever.aretrieve(query_bundle)
-        
-            if not nodes:
-                return []
-            
-            filtered_nodes = await self._is_retrieval_relevant(nodes, query_bundle)
-            
-            return filtered_nodes
-        except ValueError as e:
-            logger.warning(f"{e}: knowledge base does not contain relevant info; no nodes were retrieved")
-            return []
-            
-    async def _is_retrieval_relevant(self, retrieved_nodes: list[NodeWithScore] | None, query_bundle: str | QueryBundle) -> list[NodeWithScore] | None:
-        # Logic to check the relevance of the retrieved nodes    
-        if retrieved_nodes is None:
-            return []
-        
-        relevant_nodes = [node.text for node in retrieved_nodes]
-        
-        if len(relevant_nodes) < 2:  # Require at least 2 relevant nodes
-            return []
-            
-        # Advanced approach: Use LLM to determine relevance
-        try:
-            context = "\n".join([node for node in relevant_nodes])
-            
-            relevance_prompt = f"""
-            Question: {query_bundle}
-            
-            Retrieved context:
-            {context}
-            
-            Does the retrieved context contain information that can help answer the question? 
-            Answer with only 'YES' or 'NO'.
-            """
-            
-            response = await self.router_llm.acomplete(relevance_prompt)
-            if response.text.strip().upper() == 'YES':
-                return retrieved_nodes
-            else:
-                return []
-            
-        except Exception as e:
-            logger.warning(f"Error checking relevance: {e}")
-            if len(relevant_nodes) >= 2:
-                return retrieved_nodes
