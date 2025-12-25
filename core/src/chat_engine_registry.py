@@ -55,6 +55,10 @@ class CustomSimpleChatEngine(SimpleChatEngine):
         await self._memory.aput(ai_message)
 
         return AgentChatResponse(response=str(chat_response.message.content))
+    
+    @property
+    def memory(self) -> Memory:
+        return self._memory
 
 
 class ChatEngineRegistry:
