@@ -41,6 +41,7 @@ class CustomSimpleChatEngine(SimpleChatEngine):
         
         context_prompt = (
             "Use the context information below to answer user's question.\n"
+            "<context>\n"
             f"<{context}>"
         )
         
