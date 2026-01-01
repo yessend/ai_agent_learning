@@ -1,12 +1,20 @@
 # Implement a custom RAG System from scratch as subclass of Workflow 
 # allowing multiple users have a chat history.
+from core.config.config import Config
 from core.config.constants import RagConstants
 from core.config.llm_setup import LLMsetups
-from core.src.chat_engine_registry import ChatEngineRegistry
+from core.src.custom_chat_engine import CustomSimpleChatEngine
 from core.src.rag_ingestion import RagIngestion
 from core.helpers.logger import logger
 from core.helpers.json_extractor import extract_json_array
+from core.config.constants import RagConstants
+from core.src.rag_events import RetrievalRelevantEvent
 
+import redis
+import redis.asyncio as async_redis
+
+from llama_index.storage.chat_store.redis import RedisChatStore
+from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 from llama_index.core import Settings
 from llama_index.core.workflow import (
@@ -17,11 +25,6 @@ from llama_index.core.workflow import (
     StopEvent,
     step
 )
-
-
-# These are the custom classes to perform RAG and synthesis of an answer:
-class RetrievalRelevantEvent(Event):
-    context: str | bool
 
 
 class RagChatWorkflow(Workflow):
@@ -42,9 +45,31 @@ class RagChatWorkflow(Workflow):
         self.router_llm.callback_manager = Settings.callback_manager
         self.chat_llm.callback_manager = Settings.callback_manager
         
-        self.chat_engine_registry = ChatEngineRegistry(chat_llm = LLMsetups.CHAT_LLM)
+        self.redis_chat_store = self.redis_chat_store_init()
         self.router_retriever = RagIngestion().ingest()
     
+
+    # Helper method to initialize the Redis Async client and return the RedisChatStore
+    def redis_chat_store_init(self) -> RedisChatStore:
+
+        sync_client = redis.Redis(
+            host = Config.REDIS_HOST, 
+            port = Config.REDIS_PORT
+        )
+
+        async_client = async_redis.Redis(
+            host = Config.REDIS_HOST, 
+            port = Config.REDIS_PORT
+        )
+
+        REDIS_STORE = RedisChatStore(
+            redis_client = sync_client,   # Used for internal sync calls
+            aredis_client = async_client, # Used for your .achat() calls
+            ttl = Config.REDIS_TTL   
+        )
+
+        return REDIS_STORE
+
     
     @step
     async def _is_retrieval_relevant(self, ctx: Context, ev: StartEvent) -> RetrievalRelevantEvent | None:
@@ -119,17 +144,21 @@ class RagChatWorkflow(Workflow):
         user_id = await ctx.store.get("user_id", default = None)
         
         context = ev.context
-        prompt = ""
         
         if not context:
             logger.warning("No context is provided.")
+
+        memory = ChatMemoryBuffer.from_defaults(
+            token_limit = Config.CHAT_MEMORY_TOKEN_LIMIT,
+            chat_store = self.redis_chat_store,            
+            chat_store_key = f"user_{user_id}"             
+        )
+
+        chat_engine = CustomSimpleChatEngine.from_defaults(
+            llm = self.chat_llm,           
+            memory = memory,               
+            system_prompt = RagConstants.SYSTEM_PROMPT_WORKFLOW  
+        )
         
-        prompt = f"""
-                    User's name: {user_name}
-                    User's question: {user_query}
-                    """
-        
-        chat_engine = self.chat_engine_registry.get_or_create_chat_engine(user_id)
-        
-        response = await chat_engine.achat(prompt, context)
+        response = await chat_engine.achat(user_query, user_name, context)
         return StopEvent(result = response.response)

@@ -20,6 +20,11 @@ class Config:
     QDRANT_URL = os.getenv("QDRANT_URL")
     QDRANT_PORT = int(os.getenv("QDRANT_PORT"))
     
+    REDIS_HOST = os.getenv("REDIS_HOST")
+    REDIS_PORT = int(os.getenv("REDIS_PORT"))
+    REDIS_URL = os.getenv("REDIS_URL")
+    REDIS_TTL = 3600
+
     SIMILARITY_TOP_K = 5
     ROUTER_RETRIEVER_MAX_OUTPUTS = 3
     
