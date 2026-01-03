@@ -7,7 +7,7 @@ from core.config.config import Config
 from core.config.constants import RagConstants
 from core.config.llm_setup import LLMsetups
 
-from core.helpers.logger import logger
+from helpers.logger import logger
 
 class RagIngestion:
     # This is the RAG class to ingest the documents and form the knowledge base

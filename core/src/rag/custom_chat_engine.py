@@ -6,8 +6,6 @@ from llama_index.core.callbacks import trace_method
 
 from typing import Optional, List
 
-from core.helpers.logger import logger
-
 
 class CustomSimpleChatEngine(SimpleChatEngine):
     
