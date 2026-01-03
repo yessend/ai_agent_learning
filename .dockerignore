@@ -1,0 +1,14 @@
+# --- Secrets ---
+.env
+
+# --- Python virtual environment ---
+.venv
+
+# --- Python files cache ---
+__pycache__
+
+# --- git ---
+.git
+
+# --- VScode workspace ---
+ai_agent_learning.code-workspace
