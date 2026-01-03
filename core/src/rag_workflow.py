@@ -20,7 +20,6 @@ from llama_index.core import Settings
 from llama_index.core.workflow import (
     Workflow,
     Context,
-    Event,
     StartEvent,
     StopEvent,
     step
@@ -151,7 +150,8 @@ class RagChatWorkflow(Workflow):
         memory = ChatMemoryBuffer.from_defaults(
             token_limit = Config.CHAT_MEMORY_TOKEN_LIMIT,
             chat_store = self.redis_chat_store,            
-            chat_store_key = f"user_{user_id}"             
+            chat_store_key = f"user_{user_id}",
+            llm = self.chat_llm             
         )
 
         chat_engine = CustomSimpleChatEngine.from_defaults(
