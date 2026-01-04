@@ -2,6 +2,7 @@ services:
 
   app:
     build: .
+    container_name: rag_app
     ports:
       - "7860:7860"
     env_file:
@@ -13,6 +14,7 @@ services:
   
   redis:
     image: redis/redis-stack:latest
+    container_name: redis-db
     ports:
       - "6379:6379"  # The database port
       - "8001:8001"  # RedisInsight (The UI)
