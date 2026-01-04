@@ -48,27 +48,36 @@ class RagChatWorkflow(Workflow):
         self.redis_chat_store = self.redis_chat_store_init()
         self.router_retriever = RagIngestion().ingest()
     
-
+    # --------------------------------------------------------------------------------
     # Helper method to initialize the Redis Async client and return the RedisChatStore
     def redis_chat_store_init(self) -> RedisChatStore:
 
-        sync_client = redis.Redis(
-            host = Config.REDIS_HOST, 
-            port = Config.REDIS_PORT
+        async_pool = async_redis.BlockingConnectionPool.from_url(
+            Config.REDIS_URL, 
+            max_connections = Config.REDIS_MAX_CONNECTIONS,
+            timeout = Config.REDIS_TIMEOUT, 
+            decode_responses = False
         )
 
-        async_client = async_redis.Redis(
-            host = Config.REDIS_HOST, 
-            port = Config.REDIS_PORT
-        )
+        custom_async_client = async_redis.Redis(connection_pool = async_pool)
 
+        # For llama_index
+        sync_pool = redis.ConnectionPool.from_url(
+            Config.REDIS_URL,
+            max_connections = Config.REDIS_MAX_CONNECTIONS,
+            decode_responses = False
+        )
+        custom_sync_client = redis.Redis(connection_pool = sync_pool)
+
+        # 3. Initialize Store with BOTH
         REDIS_STORE = RedisChatStore(
-            redis_client = sync_client,   # Used for internal sync calls
-            aredis_client = async_client, # Used for your .achat() calls
-            ttl = Config.REDIS_TTL   
+            redis_client = custom_sync_client,   
+            aredis_client = custom_async_client, 
+            ttl = Config.REDIS_TTL
         )
 
         return REDIS_STORE
+    # --------------------------------------------------------------------------------
 
     
     @step

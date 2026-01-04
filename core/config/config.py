@@ -24,6 +24,9 @@ class Config:
     REDIS_PORT = int(os.getenv("REDIS_PORT"))
     REDIS_URL = os.getenv("REDIS_URL")
     REDIS_TTL = 3600
+    REDIS_MAX_CONNECTIONS = 100
+    REDIS_TIMEOUT = 5 # in seconds
+    REDIS_TTL = 3600 # in seconds (make it bigger for the production)
 
     SIMILARITY_TOP_K = 5
     ROUTER_RETRIEVER_MAX_OUTPUTS = 3
