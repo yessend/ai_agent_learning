@@ -3,19 +3,17 @@
 from core.config.config import Config
 from core.config.constants import RagConstants
 from core.config.llm_setup import LLMsetups
-from core.src.rag.custom_chat_engine import CustomSimpleChatEngine
+from core.src.rag.custom_chat_engine import CustomChatEngine
 from core.src.rag.rag_ingestion import RagIngestion
-from core.config.constants import RagConstants
 from core.src.rag.rag_events import RetrievalRelevantEvent
 
 from helpers.logger import logger
 from helpers.json_extractor import extract_json_array
 
-import redis
 import redis.asyncio as async_redis
 
+from llama_index.core.base.llms.types import ChatMessage
 from llama_index.storage.chat_store.redis import RedisChatStore
-from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 from llama_index.core import Settings
 from llama_index.core.workflow import (
@@ -61,22 +59,13 @@ class RagChatWorkflow(Workflow):
 
         custom_async_client = async_redis.Redis(connection_pool = async_pool)
 
-        # For llama_index
-        sync_pool = redis.ConnectionPool.from_url(
-            Config.REDIS_URL,
-            max_connections = Config.REDIS_MAX_CONNECTIONS,
-            decode_responses = False
-        )
-        custom_sync_client = redis.Redis(connection_pool = sync_pool)
-
         # 3. Initialize Store with BOTH
-        REDIS_STORE = RedisChatStore(
-            redis_client = custom_sync_client,   
+        redis_store = RedisChatStore(
             aredis_client = custom_async_client, 
             ttl = Config.REDIS_TTL
         )
 
-        return REDIS_STORE
+        return redis_store
     # --------------------------------------------------------------------------------
 
     
@@ -157,17 +146,13 @@ class RagChatWorkflow(Workflow):
         if not context:
             logger.warning("No context is provided.")
 
-        memory = ChatMemoryBuffer.from_defaults(
-            token_limit = Config.CHAT_MEMORY_TOKEN_LIMIT,
-            chat_store = self.redis_chat_store,            
+        chat_engine = CustomChatEngine(
+            llm = self.chat_llm, 
+            system_prompt = RagConstants.SYSTEM_PROMPT_WORKFLOW,
+            redis_store = self.redis_chat_store,
             chat_store_key = f"user_{user_id}",
-            llm = self.chat_llm             
-        )
-
-        chat_engine = CustomSimpleChatEngine.from_defaults(
-            llm = self.chat_llm,           
-            memory = memory,               
-            system_prompt = RagConstants.SYSTEM_PROMPT_WORKFLOW  
+            token_limit = Config.CHAT_HISTORY_TOKEN_LIMIT,
+            fetch_limit =  Config.CHAT_HISTORY_FETCH_LIMIT             
         )
         
         response = await chat_engine.achat(user_query, user_name, context)
