@@ -8,4 +8,5 @@
 ai_agent_learning.code-workspace
 
 # --- Ignore documents directory ---
-documents
+data
+notebooks
