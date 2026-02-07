@@ -5,7 +5,7 @@ class ETLConfig:
     
     DATA_DIR = Path("./data")
     RAW_DIR = DATA_DIR / "pdfs"
-    PARSED_DIR = DATA_DIR / "parsed"
+    PARSED_DIR = DATA_DIR / "parsed_md"
     CLEANED_DIR = DATA_DIR / "cleaned"
     CHUNKED_DIR = DATA_DIR / "chunked"
     

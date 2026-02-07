@@ -12,8 +12,12 @@ class ETLConstants:
 
         If the text is short or lacks specific detail, provide fewer keywords (1-3). 
         If the text contains no meaningful searchable information, return an empty list.
+        Output strictly in JSON format. Do not include any preamble, explanation, or markdown formatting.
+
+        Example: {{ "keywords": ["keyword1", "keyword2", "keyword3", ...] }}
 
         Text: {node_text}
+        Output:
     """
 
     # Document summary extractor prompt
