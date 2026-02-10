@@ -10,6 +10,7 @@ class Config:
     CHAT_LLM = "gemini-2.5-flash-lite"
     CHAT_LLM_TEMPERATURE = 0.1
     CHAT_LLM_MAX_TOKENS = 3000
+    CHAT_THINKING_BUDGET = 1024
 
     ROUTER_LLM = "gemini-2.5-flash-lite"
     ROUTER_LLM_TEMPERATURE = 0.1
