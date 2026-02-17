@@ -1,6 +1,6 @@
 import json
 
-from core.config.config import Config
+from app.core.config import Config
 
 from google.genai import Client, types
 import redis.asyncio as async_redis
@@ -23,6 +23,7 @@ class GeminiChatEngine():
             system_instruction=system_prompt,
             temperature=Config.CHAT_LLM_TEMPERATURE,
             thinking_config=types.ThinkingConfig(
+                include_thoughts=True,
                 thinking_budget=Config.CHAT_THINKING_BUDGET
             )
         )
@@ -30,7 +31,7 @@ class GeminiChatEngine():
         self.redis_async_client = redis_async_client
         self.redis_store_key = redis_store_key
         
-        self.history_fetch_limit = history_fetch_limit
+        self.history_fetch_limit = history_fetch_limit              # How many messages to retrieve from the redis store at once
         self.history_token_limit = history_token_limit
     
     
@@ -43,7 +44,9 @@ class GeminiChatEngine():
                 dict_temp["content"] = content.parts[0].text
             else:
                 dict_temp["role"] = content.candidates[0].content.role
-                dict_temp["content"] = content.candidates[0].content.parts[0].text
+                dict_temp["content"] = content.candidates[0].content.parts[1].text
+                thought_process = getattr(content.candidates[0].content.parts[0], 'thought', "No thinking data available")
+                dict_temp["thought_process"] = content.candidates[0].content.parts[0].text if thought_process else thought_process
                 usage_tokens = {
                     'prompt_tokens': content.usage_metadata.prompt_token_count,
                     'completion_tokens': content.usage_metadata.candidates_token_count,
@@ -117,7 +120,7 @@ class GeminiChatEngine():
             config=self.gen_config
         )
         
-        ai_message = response.text
+        ai_message = response
         
         messages_to_push = await self._contents_to_dict([query_push, response])
         await self.redis_async_client.rpush(self.redis_store_key, *messages_to_push)

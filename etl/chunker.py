@@ -8,7 +8,7 @@ from llama_index.llms.google_genai import GoogleGenAI
 import hashlib
 import json
 
-from core.config.config import Config
+from app.core.config import Config
 from helpers.logger import logger
 from etl.core.constants import ETLConstants
 from etl.core.config import ETLConfig

@@ -10,3 +10,6 @@ ai_agent_learning.code-workspace
 # --- Ignore documents directory ---
 data
 notebooks
+
+# --- Ignore unnecessary file extensions ---
+*.pyc

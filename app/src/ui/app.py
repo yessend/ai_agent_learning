@@ -1,6 +1,6 @@
 import gradio as gr
 import uuid
-from core.src.rag.rag_workflow import RagChatWorkflow
+from app.src.rag.rag_workflow import RagChatWorkflow
 
 rag_chat = RagChatWorkflow()
 
