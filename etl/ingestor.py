@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from etl.core.config import ETLConfig
 
 from llama_index.core.schema import TextNode, IndexNode
@@ -6,7 +7,77 @@ from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from qdrant_client import QdrantClient
+
+from qdrant_client import QdrantClient, AsyncQdrantClient, async_qdrant_client
+from qdrant_client.models import (
+    VectorParams,
+    SparseVectorParams,
+    Distance,
+    Modifier,
+    PointStruct,
+    Document
+)
+from sentence_transformers import SentenceTransformer
+
+
+class QdrantVectorDB:
+
+    def __init__(
+            self,
+            qdrant_client: QdrantClient,
+            async_qdrant_client: AsyncQdrantClient,
+            embed_model: SentenceTransformer,
+            embed_dim: int,
+            collection_name: str
+        ) -> None:
+        self.qdrant_client = qdrant_client
+        self.async_qdrant_client = async_qdrant_client
+        self.embed_model = embed_model
+        self.embed_dim = embed_dim
+        self.collection_name = collection_name
+    
+
+    async def _get_collection(self) -> bool:
+        if not await self.async_qdrant_client.collection_exists(self.collection_name):
+            await self.async_qdrant_client.create_collection(
+                collection_name=self.collection_name,
+                vectors_config={
+                    "dense": VectorParams(
+                        distance=Distance.COSINE,
+                        size=self.embed_dim
+                    )
+                },
+                sparse_vectors_config={
+                    "sparse": SparseVectorParams(
+                        modifier=Modifier.IDF
+                    )
+                }
+            )
+            
+    
+    async def ingest_points(self, file_path: Path):
+        with open(file_path, "r", encoding="utf-8") as file:
+            nodes = json.load(file)
+        await self.async_qdrant_client.upsert(
+            collection_name=self.collection_name,
+            points=[
+                PointStruct(
+                    id=node["id_"],
+                    vector={
+                        "dense": self.embed_model.encode_document(node["text"]).tolist(),
+                        "sparse": Document(
+                            text=node["text"],
+                            model="Qdrant/bm25"
+                        )
+                    },
+                    payload={
+                        "text": node["text"],
+                        "metadata": node["metadata"]
+                    }
+                )
+                for node in nodes
+            ]
+        )
 
 
 def main():
