@@ -33,18 +33,18 @@ class QdrantVectorDB:
         self.qdrant_client = qdrant_client
         self.async_qdrant_client = async_qdrant_client
         self.embed_model = embed_model
-        self.embed_dim = embed_dim
         self.collection_name = collection_name
+        self._get_collection()
     
 
-    async def _get_collection(self) -> bool:
-        if not await self.async_qdrant_client.collection_exists(self.collection_name):
-            await self.async_qdrant_client.create_collection(
+    def _get_collection(self) -> bool:
+        if not self.qdrant_client.collection_exists(self.collection_name):
+            self.qdrant_client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config={
                     "dense": VectorParams(
                         distance=Distance.COSINE,
-                        size=self.embed_dim
+                        size=self.embed_model.get_sentence_embedding_dimension()
                     )
                 },
                 sparse_vectors_config={
@@ -53,9 +53,52 @@ class QdrantVectorDB:
                     )
                 }
             )
-            
+
+
+    async def _aget_collection(self) -> bool:
+        if not await self.async_qdrant_client.collection_exists(self.collection_name):
+            await self.async_qdrant_client.create_collection(
+                collection_name=self.collection_name,
+                vectors_config={
+                    "dense": VectorParams(
+                        distance=Distance.COSINE,
+                        size=self.embed_model.get_sentence_embedding_dimension()
+                    )
+                },
+                sparse_vectors_config={
+                    "sparse": SparseVectorParams(
+                        modifier=Modifier.IDF
+                    )
+                }
+            )
+
+
+    def sync_ingest_points(self, file_path: Path):
+        with open(file_path, "r", encoding="utf-8") as file:
+            nodes = json.load(file)
+        self.qdrant_client.upsert(
+            collection_name=self.collection_name,
+            points=[
+                PointStruct(
+                    id=node["id_"],
+                    vector={
+                        "dense": self.embed_model.encode_document(node["text"]).tolist(),
+                        "sparse": Document(
+                            text=node["text"],
+                            model="Qdrant/bm25"
+                        )
+                    },
+                    payload={
+                        "text": node["text"],
+                        "metadata": node["metadata"]
+                    }
+                )
+                for node in nodes
+            ]
+        )
+
     
-    async def ingest_points(self, file_path: Path):
+    async def async_ingest_points(self, file_path: Path):
         with open(file_path, "r", encoding="utf-8") as file:
             nodes = json.load(file)
         await self.async_qdrant_client.upsert(
@@ -78,6 +121,12 @@ class QdrantVectorDB:
                 for node in nodes
             ]
         )
+    
+
+    # def sync_search_points(self, query: str) -> list[PointStruct]:
+    #     self.qdrant_client.query_points(
+
+    #     )
 
 
 def main():
