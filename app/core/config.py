@@ -12,16 +12,22 @@ class Config:
     CHAT_LLM_MAX_TOKENS = 3000
     CHAT_THINKING_BUDGET = 2048
     
-    EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
+    DENSE_EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
+    SPARSE_EMBEDDING_MODEL = "Qdrant/bm25"
     
     QDRANT_URL = os.getenv("QDRANT_URL")
     QDRANT_HOST = os.getenv("QDRANT_HOST")
     QDRANT_PORT = int(os.getenv("QDRANT_PORT"))
+
     QDRANT_COLLECTION_NAME = "some_collection"
+    QDRANT_DENSE_POINTS_LIMIT = 20
+    QDRANT_SPARSE_POINTS_LIMIT = 20
+    QDRANT_RRF_POINTS_LIMIT = 20
     
     REDIS_HOST = os.getenv("REDIS_HOST")
     REDIS_PORT = int(os.getenv("REDIS_PORT"))
     REDIS_URL = os.getenv("REDIS_URL")
+    
     REDIS_MAX_CONNECTIONS = 100
     REDIS_TIMEOUT = 5 # in seconds
     REDIS_TTL = 3600 # in seconds (make it bigger for the production)

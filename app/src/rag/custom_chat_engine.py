@@ -10,14 +10,14 @@ class GeminiChatEngine():
     
     def __init__(
         self,
-        llm_client: Client,
+        gemini_client: Client,
         system_prompt: str,
         redis_async_client: async_redis.Redis | None, 
         redis_store_key: str,
         history_fetch_limit: int,
         history_token_limit: int
     ):
-        self.llm_client = llm_client
+        self.gemini_client = gemini_client
         self.gen_config = types.GenerateContentConfig(
             tools=[types.Tool(google_search=types.GoogleSearch())],
             system_instruction=system_prompt,
@@ -31,7 +31,7 @@ class GeminiChatEngine():
         self.redis_async_client = redis_async_client
         self.redis_store_key = redis_store_key
         
-        self.history_fetch_limit = history_fetch_limit              # How many messages to retrieve from the redis store at once
+        self.history_fetch_limit = history_fetch_limit  # How many messages to retrieve from the redis store at once
         self.history_token_limit = history_token_limit
     
     
@@ -114,7 +114,7 @@ class GeminiChatEngine():
         
         contents = chat_history + [query_wrapped]
         
-        response = await self.llm_client.aio.models.generate_content(
+        response = await self.gemini_client.aio.models.generate_content(
             model=Config.CHAT_LLM,
             contents=contents,
             config=self.gen_config

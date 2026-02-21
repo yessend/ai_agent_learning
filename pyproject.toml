@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "docling>=2.71.0",
+    "fastembed>=0.7.4",
     "google-genai>=1.55.0",
     "gradio>=6.2.0",
     "huggingface-hub[hf-xet]>=0.36.0",

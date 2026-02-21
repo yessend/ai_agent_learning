@@ -76,7 +76,7 @@ class RagChatWorkflow(Workflow):
                 context = "\n".join([node.text if node.text != "None" else str(node.metadata) for node in retrieved_nodes])
             
             chat_engine = GeminiChatEngine(
-                llm_client=self.gemini_client, 
+                gemini_client=self.gemini_client, 
                 system_prompt=RagConstants.SYSTEM_PROMPT_WORKFLOW,
                 redis_async_client=self.redis_async_client,
                 redis_store_key=str(uuid5(NAMESPACE_DNS, str(user_id))),

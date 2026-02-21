@@ -1,5 +1,6 @@
 # --- Secrets ---
 .env
+/qdrant_storage
 
 # --- Python ---
 .venv/
